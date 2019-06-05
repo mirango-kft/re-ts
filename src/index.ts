@@ -14,11 +14,13 @@ type Something = object | string | number | boolean | symbol | bigint;
 type Action<T extends string, P = {}> = { readonly type: T; readonly payload: P };
 type ActionCreatorsMap = { [key: string]: (...args: any[]) => Action<any> };
 type ActionTypes<T extends ActionCreatorsMap> = { [K in keyof T]: ReturnType<T[K]>["type"] };
-type ReducerHandlers<S, A extends Actions<ActionCreatorsMap>> = {
+type ReducerHandlers<S, A extends CreateActionType<ActionCreatorsMap>> = {
   [K in A["type"]]?: (state: Draft<S>, payload: Extract<A, { type: K }>["payload"]) => void
 };
 
-export type Actions<T extends ActionCreatorsMap> = { [K in keyof T]: ReturnType<T[K]> }[keyof T];
+export type CreateActionType<T extends ActionCreatorsMap> = {
+  [K in keyof T]: ReturnType<T[K]>
+}[keyof T];
 
 export function action<T extends string>(type: T): () => { readonly type: T; readonly payload: {} };
 export function action<T extends string, C extends (...args: any[]) => Something>(
@@ -55,11 +57,11 @@ export function createActions<T extends ActionCreatorsMap>(
   return [actions, actionTypes] as [T, ActionTypes<T>];
 }
 
-export function makeReducer<A extends Actions<ActionCreatorsMap>>() {
-  return <S>(initialState: S, handlers: ReducerHandlers<S, A>) => {
-    return (state = initialState, action: A) =>
+export function makeReducer<A extends ActionCreatorsMap>() {
+  return <S>(initialState: S, handlers: ReducerHandlers<S, CreateActionType<A>>) => {
+    return (state = initialState, action: CreateActionType<A>) =>
       produce(state, draft => {
-        const handler = handlers[action.type as A["type"]];
+        const handler = handlers[action.type as CreateActionType<A>["type"]];
         if (handler) {
           handler(draft, action.payload);
         }
