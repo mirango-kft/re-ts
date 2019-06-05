@@ -1,12 +1,13 @@
 {
-  "name": "@gustorn/re-ts",
-  "version": "1.0.0",
+  "name": "@mirango/re-ts",
+  "version": "1.0.1",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "author": "Gustorn <gustorn@gmail.com>",
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "test": "jest -c jest.config.js"
+    "test": "jest -c jest.config.js",
+    "prepublish": "yarn build"
   },
   "license": "MIT",
   "dependencies": {
