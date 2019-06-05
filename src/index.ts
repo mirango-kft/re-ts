@@ -57,11 +57,11 @@ export function createActions<T extends ActionCreatorsMap>(
   return [actions, actionTypes] as [T, ActionTypes<T>];
 }
 
-export function makeReducer<A extends ActionCreatorsMap>() {
-  return <S>(initialState: S, handlers: ReducerHandlers<S, CreateActionType<A>>) => {
-    return (state = initialState, action: CreateActionType<A>) =>
+export function makeReducer<A extends CreateActionType<ActionCreatorsMap>>() {
+  return <S>(initialState: S, handlers: ReducerHandlers<S, A>) => {
+    return (state = initialState, action: A) =>
       produce(state, draft => {
-        const handler = handlers[action.type as CreateActionType<A>["type"]];
+        const handler = handlers[action.type as A["type"]];
         if (handler) {
           handler(draft, action.payload);
         }

@@ -1,4 +1,4 @@
-import { Actions, action, createActions, makeReducer } from "..";
+import { CreateActionType, action, createActions, makeReducer } from "..";
 
 describe("The action creators", () => {
   it("should create an action without a payload", () => {
@@ -47,7 +47,7 @@ describe("The reducer", () => {
     b: actionCreator("action/b", (count: number) => ({ count })),
     c: actionCreator("action/c", (x: number, y: number) => ({ x, y }))
   }));
-  type TestActions = Actions<typeof actions>;
+  type TestActions = CreateActionType<typeof actions>;
 
   it("should initialize the state if it was undefined", () => {
     // Arrange

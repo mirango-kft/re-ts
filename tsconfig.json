@@ -5,6 +5,7 @@
     "moduleResolution": "node",
 
     "declaration": true,
+    "declarationDir": "dist",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
