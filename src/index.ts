@@ -2,17 +2,12 @@ import { Draft, produce } from "immer";
 
 type ArgumentTypes<T> = T extends (...args: infer A) => any ? A : never;
 type ReplaceReturnType<F, R> = (...args: ArgumentTypes<F>) => R;
-type DeepReadonly<T> = {
-  readonly [K in keyof T]: T[K] extends any[]
-    ? ReadonlyArray<T[K]>
-    : T[K] extends object
-    ? DeepReadonly<T[K]>
-    : T[K]
-};
 
 type Something = object | string | number | boolean | symbol | bigint;
-type Action<T extends string, P = {}> = { readonly type: T; readonly payload: P };
-type ActionCreatorsMap = { [key: string]: (...args: any[]) => Action<any> };
+type EmptyAction<T extends string> = { readonly type: T; readonly payload?: undefined };
+type PayloadAction<T extends string, P> = { readonly type: T; readonly payload: P };
+type Action<T extends string, P = void> = P extends never ? EmptyAction<T> : PayloadAction<T, P>;
+type ActionCreatorsMap = { [key: string]: (...args: any[]) => Action<any, any> };
 type ActionTypes<T extends ActionCreatorsMap> = { [K in keyof T]: ReturnType<T[K]>["type"] };
 type ReducerHandlers<S, A extends CreateActionType<ActionCreatorsMap>> = {
   [K in A["type"]]?: (state: Draft<S>, payload: Extract<A, { type: K }>["payload"]) => void
@@ -22,14 +17,16 @@ export type CreateActionType<T extends ActionCreatorsMap> = {
   [K in keyof T]: ReturnType<T[K]>
 }[keyof T];
 
-export function action<T extends string>(type: T): () => { readonly type: T; readonly payload: {} };
+export function action<T extends string>(
+  type: T
+): () => { readonly type: T; readonly payload?: undefined };
 export function action<T extends string, C extends (...args: any[]) => Something>(
   type: T,
   payloadCreator: C
-): ReplaceReturnType<C, DeepReadonly<{ type: T; payload: ReturnType<C> }>>;
+): ReplaceReturnType<C, { type: T; payload: ReturnType<C> }>;
 export function action<T extends string, C extends (...args: any[]) => Something>(
   type: T,
-  payloadCreator = (() => ({})) as C
+  payloadCreator = (() => undefined) as any
 ) {
   return (...args: ArgumentTypes<C>) => ({ type, payload: payloadCreator(...args) });
 }
