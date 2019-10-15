@@ -24,7 +24,7 @@ interface ReducerDefinitionMap {
   [key: string]: ReducerDefiniton<any, any>;
 }
 
-type Reducer<S> = (state: S, action: { type: any }) => S;
+type Reducer<S> = (state: S, action: any) => S;
 
 interface ReducerMap {
   [key: string]: Reducer<any>;
