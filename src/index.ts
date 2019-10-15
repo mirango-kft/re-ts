@@ -24,6 +24,12 @@ interface ReducerDefinitionMap {
   [key: string]: ReducerDefiniton<any, any>;
 }
 
+type Reducer<S> = (state: S, action: Action<any>) => S;
+
+interface ReducerMap {
+  [key: string]: Reducer<any>;
+}
+
 type ReducerActionType<R extends ReducerHandlers<any, any>> = R extends ReducerHandlers<any, infer A> ? A : never;
 
 type MakeStateFromDefinitionMap<T extends ReducerDefinitionMap> = {
@@ -82,7 +88,7 @@ export function makeLeafReducer<A extends CreateActionType<ActionCreatorsMap>>()
   });
 }
 
-export function makeRootReducer<T extends ReducerDefinitionMap>(definitions: T) {
+export function makeRootReducer<T extends ReducerDefinitionMap, A extends ReducerMap>(definitions: T, additionalReducers = {} as A) {
   const initialState = Object.entries(definitions).reduce((state, [key, { initialState }]) => {
     state[key as keyof T] = initialState;
     return state;
@@ -101,18 +107,27 @@ export function makeRootReducer<T extends ReducerDefinitionMap>(definitions: T) 
       actionHandlers.push({ key: stateKey, handler: actionHandler });
     }
     return handlers;
-  }, {} as { [key: string]: Array<{ key: string, handler: (state: any, action: Action<any>) => any }> });
+  }, {} as { [key: string]: Array<{ key: string, handler: Reducer<any> }> });
+  const additionalHandlers = Object.entries(additionalReducers).reduce((handlers, [reducerKey, handler]) => {
+    handlers.push({ key: reducerKey, handler });
+    return handlers;
+  }, [] as Array<{ key: string; handler: Reducer<any> }>);
   return (state = initialState, action: MakeActionFromDefinitionMap<T>) => {
-    const handlers = handlersByAction[action.type]
-    if (!handlers) {
-      return state;
-    }
-
     return produce(state, draft => {
+      for (let i = 0; i < additionalHandlers.length; i++) {
+        const keyAndHandler = additionalHandlers[i];
+        keyAndHandler.handler(draft[keyAndHandler.key], action);
+      }
+
+      const handlers = handlersByAction[action.type]
+      if (!handlers) {
+        return;
+      }
+
       for (let i = 0; i < handlers.length; i++) {
         const keyAndHandler = handlers[i];
         keyAndHandler.handler(draft[keyAndHandler.key], action.payload);
       }
-    });
+    }) as MakeStateFromDefinitionMap<T> & { [K in keyof A]: ReturnType<A[K]> };
   };
 }
