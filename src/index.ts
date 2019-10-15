@@ -1,4 +1,5 @@
 import { Draft, produce, setAutoFreeze } from "immer";
+import { combineReducers } from "redux";
 
 setAutoFreeze(false);
 
@@ -108,17 +109,10 @@ export function makeRootReducer<T extends ReducerDefinitionMap, A extends Reduce
     }
     return handlers;
   }, {} as { [key: string]: Array<{ key: string, handler: Reducer<any> }> });
-  const additionalHandlers = Object.entries(additionalReducers).reduce((handlers, [reducerKey, handler]) => {
-    handlers.push({ key: reducerKey, handler });
-    return handlers;
-  }, [] as Array<{ key: string; handler: Reducer<any> }>);
+  const fallbackReducer = combineReducers(additionalReducers);
   return (state = initialState, action: MakeActionFromDefinitionMap<T>) => {
-    return produce(state, draft => {
-      for (let i = 0; i < additionalHandlers.length; i++) {
-        const keyAndHandler = additionalHandlers[i];
-        keyAndHandler.handler(draft[keyAndHandler.key], action);
-      }
-
+    const nextState = fallbackReducer(state, action);
+    return produce(nextState, draft => {
       const handlers = handlersByAction[action.type]
       if (!handlers) {
         return;

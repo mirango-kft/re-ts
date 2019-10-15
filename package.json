@@ -15,7 +15,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "immer": "^4.0.1"
+    "immer": "^4.0.1",
+    "redux": "^4.0.4"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
