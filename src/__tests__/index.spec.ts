@@ -1,4 +1,4 @@
-import { CreateActionType, action, createActions, makeReducer } from "..";
+import { CreateActionType, action, createActions, makeLeafReducer, makeRootReducer } from "..";
 
 describe("The action creators", () => {
   it("should create an action without a payload", () => {
@@ -6,7 +6,7 @@ describe("The action creators", () => {
     const actual = action("action/a");
 
     // Assert
-    expect(actual()).toEqual({ type: "action/a", payload: {} });
+    expect(actual()).toEqual({ type: "action/a", payload: undefined });
   });
 
   it("should create an action with a simple payload", () => {
@@ -34,7 +34,7 @@ describe("The action creators", () => {
     }));
 
     // Assert
-    expect(actions.a()).toEqual({ type: "action/a", payload: {} });
+    expect(actions.a()).toEqual({ type: "action/a", payload: undefined });
     expect(actions.b("b")).toEqual({ type: "action/b", payload: "b" });
     expect(actions.c("c")).toEqual({ type: "action/c", payload: { id: "c" } });
   });
@@ -51,68 +51,72 @@ describe("The reducer", () => {
 
   it("should initialize the state if it was undefined", () => {
     // Arrange
-    const reducer = makeReducer<TestActions>()(initialState, {});
+    const count = makeLeafReducer<TestActions>()(initialState, {});
+    const reducer = makeRootReducer({ count });
 
     // Act
     const actual = reducer(undefined, actions.a());
 
     // Assert
-    expect(actual).toBe(initialState);
+    expect(actual.count).toBe(initialState);
   });
 
   it("should not mutate the state", () => {
     // Arrange
-    const reducer = makeReducer<TestActions>()(initialState, {
+    const count = makeLeafReducer<TestActions>()(initialState, {
       [actionTypes.a]: state => {
         state.a += 1;
       }
     });
+    const reducer = makeRootReducer({ count });
 
     // Act
     const actual = reducer(undefined, actions.a());
 
     // Assert
-    expect(actual === initialState).toBe(false);
-    expect(actual).toEqual({ ...initialState, a: 1 });
+    expect(actual.count === initialState).toBe(false);
+    expect(actual.count).toEqual({ ...initialState, a: 1 });
   });
 
   it("should not handle an action if it has no handler defined for it", () => {
     // Arrange
-    const reducer = makeReducer<TestActions>()(initialState, {
+    const count = makeLeafReducer<TestActions>()(initialState, {
       [actionTypes.a]: state => {
         state.a += 1;
       }
     });
+    const reducer = makeRootReducer({ count });
 
     // Act
     const temp = reducer(undefined, actions.a());
     const actual = reducer(temp, actions.b(10));
 
     // Assert
-    expect(actual === initialState).toBe(false);
-    expect(actual).toBe(temp);
-    expect(actual).toEqual({ ...initialState, a: 1 });
+    expect(actual.count === initialState).toBe(false);
+    expect(actual.count).toBe(temp.count);
+    expect(actual.count).toEqual({ ...initialState, a: 1 });
   });
 
   it("should forward action payloads to the reducer functions", () => {
     // Arrange
-    const reducer = makeReducer<TestActions>()(initialState, {
+    const count = makeLeafReducer<TestActions>()(initialState, {
       [actionTypes.b]: (state, { count }) => {
         state.b += count;
       }
     });
+    const reducer = makeRootReducer({ count });
 
     // Act
     const actual = reducer(undefined, actions.b(10));
 
     // Assert
-    expect(actual === initialState).toBe(false);
-    expect(actual).toEqual({ ...initialState, b: 10 });
+    expect(actual.count === initialState).toBe(false);
+    expect(actual.count).toEqual({ ...initialState, b: 10 });
   });
 
   it("should handle actions dispatched in sequence", () => {
     // Arrange
-    const reducer = makeReducer<TestActions>()(initialState, {
+    const count = makeLeafReducer<TestActions>()(initialState, {
       [actionTypes.a]: state => {
         state.a += 1;
       },
@@ -123,6 +127,7 @@ describe("The reducer", () => {
         state.c += x + y;
       }
     });
+    const reducer = makeRootReducer({ count });
 
     // Act
     const a = reducer(undefined, actions.a());
@@ -130,9 +135,9 @@ describe("The reducer", () => {
     const actual = reducer(b, actions.c(2, 3));
 
     // Assert
-    expect(a === b).toBe(false);
-    expect(b === actual).toBe(false);
-    expect(actual === initialState).toBe(false);
-    expect(actual).toEqual({ a: 1, b: 10, c: 5 });
+    expect(a.count === b.count).toBe(false);
+    expect(b.count === actual.count).toBe(false);
+    expect(actual.count === initialState).toBe(false);
+    expect(actual.count).toEqual({ a: 1, b: 10, c: 5 });
   });
 });

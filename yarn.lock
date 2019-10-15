@@ -320,7 +320,7 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
-"@types/estree@0.0.39":
+"@types/estree@*":
   version "0.0.39"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"
   integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
@@ -350,17 +350,17 @@
   resolved "https://registry.yarnpkg.com/@types/jest-diff/-/jest-diff-20.0.1.tgz#35cc15b9c4f30a18ef21852e255fdb02f6d59b89"
   integrity sha512-yALhelO3i0hqZwhjtcr6dYyaLoCHbAMshwtj6cGxTvHZAKXHsYGdff6E8EPw3xLKY0ELUTQ69Q1rQiJENnccMA==
 
-"@types/jest@^24.0.18":
-  version "24.0.18"
-  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-24.0.18.tgz#9c7858d450c59e2164a8a9df0905fc5091944498"
-  integrity sha512-jcDDXdjTcrQzdN06+TSVsPPqxvsZA/5QkYfIZlq1JMw7FdP5AZylbOc+6B/cuDurctRe+MziUMtQ3xQdrbjqyQ==
+"@types/jest@^24.0.19":
+  version "24.0.19"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-24.0.19.tgz#f7036058d2a5844fe922609187c0ad8be430aff5"
+  integrity sha512-YYiqfSjocv7lk5H/T+v5MjATYjaTMsUkbDnjGqSMoO88jWdtJXJV4ST/7DKZcoMHMBvB2SeSfyOzZfkxXHR5xg==
   dependencies:
     "@types/jest-diff" "*"
 
-"@types/node@^12.7.5":
-  version "12.7.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.5.tgz#e19436e7f8e9b4601005d73673b6dc4784ffcc2f"
-  integrity sha512-9fq4jZVhPNW8r+UYKnxF1e2HkDWOWKM5bC2/7c9wPV835I0aOrVbS/Hw/pWPk2uKrNXQqg9Z959Kz+IYDd5p3w==
+"@types/node@*":
+  version "12.7.12"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.12.tgz#7c6c571cc2f3f3ac4a59a5f2bd48f5bdbc8653cc"
+  integrity sha512-KPYGmfD0/b1eXurQ59fXD1GBzhSQfz6/lKBxkaHX9dKTzjXbK68Zt7yGUxUsCS1jeTy/8aL+d9JEr+S54mpkWQ==
 
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
@@ -412,10 +412,10 @@ acorn@^6.0.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.3.0.tgz#0087509119ffa4fc0a0041d1e93a417e68cb856e"
   integrity sha512-/czfa8BwS88b9gWQVhc8eknunSA2DoJpJyTQkhheIf5E48u1N0R4q/YxxsAeqRrmK9TQ/uYfgLDfZo91UlANIA==
 
-acorn@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.0.0.tgz#26b8d1cd9a9b700350b71c0905546f64d1284e7a"
-  integrity sha512-PaF/MduxijYYt7unVGRuds1vBC9bFxbNf+VWqhOClfdgy7RlVkQqt610ig1/yxTgsDIfW1cWDel5EBbOy3jdtQ==
+acorn@^7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.1.0.tgz#949d36f2c292535da602283586c2477c57eb2d6c"
+  integrity sha512-kL5CuoXA/dgxlBbVrflsflzQ3PAas7RYZB52NOm/6839iVYJgKMJ3cQJD+t2i5+qFa8h3MDpEOJiS64E8JLnSQ==
 
 ajv@^6.5.5:
   version "6.10.2"
@@ -1449,10 +1449,10 @@ ignore-walk@^3.0.1:
   dependencies:
     minimatch "^3.0.4"
 
-immer@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/immer/-/immer-4.0.0.tgz#2f3d6b9228e86e06c0194f6d2c76bcabab394dde"
-  integrity sha512-374/m+biF/6Z24jiqR/u49SH095oIgYr/qLiQnR88svojs5RNJh/h9i0Qq0pqhgUon3Txx8PgUWH+obRy6jbKw==
+immer@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-4.0.1.tgz#9108c1ece7fdd7efb91d21e5eb4bac26f7c3a8ba"
+  integrity sha512-qZFpWApnbubcJ03gvWa6zUQz2OTkDc6yINdFXI1lm2IoMYsiVVMrxvfeLDURFhUGJfsQysDUjHSXYnJfMMHAwQ==
 
 import-local@^2.0.0:
   version "2.0.0"
@@ -3008,10 +3008,10 @@ rollup-plugin-terser@^5.1.2:
     serialize-javascript "^1.7.0"
     terser "^4.1.0"
 
-rollup-plugin-typescript2@^0.24.2:
-  version "0.24.2"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-typescript2/-/rollup-plugin-typescript2-0.24.2.tgz#832d52b2e9c0355f310e0145b2fb05a349c8414f"
-  integrity sha512-teMsD+jxRXj0voIEoyy1xAkQceBcM+cRsCZ0srrlq5ZM8kXvoVh7AMxDYC3I6QRTpJ2RAP03AyMtYmkf0ndoxA==
+rollup-plugin-typescript2@^0.24.3:
+  version "0.24.3"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-typescript2/-/rollup-plugin-typescript2-0.24.3.tgz#276fa33a9d584d500da62d3e5400307f4a46bdf2"
+  integrity sha512-D7yovQlhnRoz7pG/RF0ni+koxgzEShwfAGuOq6OVqKzcATHOvmUt2ePeYVdc9N0adcW1PcTzklUEM0oNWE/POw==
   dependencies:
     find-cache-dir "^3.0.0"
     fs-extra "8.1.0"
@@ -3033,14 +3033,14 @@ rollup-pluginutils@^2.8.1:
   dependencies:
     estree-walker "^0.6.1"
 
-rollup@^1.21.4:
-  version "1.21.4"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-1.21.4.tgz#00a41a30f90095db890301b226cbe2918e4cf54d"
-  integrity sha512-Pl512XVCmVzgcBz5h/3Li4oTaoDcmpuFZ+kdhS/wLreALz//WuDAMfomD3QEYl84NkDu6Z6wV9twlcREb4qQsw==
+rollup@^1.24.0:
+  version "1.24.0"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-1.24.0.tgz#0ace969508babb7a5fcb228e831e9c9a2873c2b0"
+  integrity sha512-PiFETY/rPwodQ8TTC52Nz2DSCYUATznGh/ChnxActCr8rV5FIk3afBUb3uxNritQW/Jpbdn3kq1Rwh1HHYMwdQ==
   dependencies:
-    "@types/estree" "0.0.39"
-    "@types/node" "^12.7.5"
-    acorn "^7.0.0"
+    "@types/estree" "*"
+    "@types/node" "*"
+    acorn "^7.1.0"
 
 rsvp@^4.8.4:
   version "4.8.5"
@@ -3544,10 +3544,10 @@ type-check@~0.3.2:
   dependencies:
     prelude-ls "~1.1.2"
 
-typescript@^3.6.3:
-  version "3.6.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.6.3.tgz#fea942fabb20f7e1ca7164ff626f1a9f3f70b4da"
-  integrity sha512-N7bceJL1CtRQ2RiG0AQME13ksR7DiuQh/QehubYcghzv20tnh+MQnQIuJddTmsbqYj+dztchykemz0zFzlvdQw==
+typescript@^3.6.4:
+  version "3.6.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.6.4.tgz#b18752bb3792bc1a0281335f7f6ebf1bbfc5b91d"
+  integrity sha512-unoCll1+l+YK4i4F8f22TaNVPRHcD9PA3yCuZ8g5e0qGqlVlJ/8FSateOLLSagn+Yg5+ZwuPkL8LFUc0Jcvksg==
 
 uglify-js@^3.1.4:
   version "3.6.0"
