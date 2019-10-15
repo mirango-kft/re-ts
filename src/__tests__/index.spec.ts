@@ -52,7 +52,7 @@ describe("The reducer", () => {
   it("should initialize the state if it was undefined", () => {
     // Arrange
     const count = makeLeafReducer<TestActions>()(initialState, {});
-    const reducer = makeRootReducer({ count });
+    const reducer = makeRootReducer({ count }, { test: () => 1 });
 
     // Act
     const actual = reducer(undefined, actions.a());
@@ -85,7 +85,7 @@ describe("The reducer", () => {
         state.a += 1;
       }
     });
-    const reducer = makeRootReducer({ count });
+    const reducer = makeRootReducer({ count }, { x: () => 10 });
 
     // Act
     const temp = reducer(undefined, actions.a());

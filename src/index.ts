@@ -1,5 +1,4 @@
 import { Draft, produce, setAutoFreeze } from "immer";
-import { combineReducers } from "redux";
 
 setAutoFreeze(false);
 
@@ -109,19 +108,38 @@ export function makeRootReducer<T extends ReducerDefinitionMap, A extends Reduce
     }
     return handlers;
   }, {} as { [key: string]: Array<{ key: string, handler: Reducer<any> }> });
-  const fallbackReducer = combineReducers(additionalReducers);
-  return (state = initialState, action: MakeActionFromDefinitionMap<T>) => {
-    const nextState = fallbackReducer(state, action);
-    return produce(nextState, draft => {
-      const handlers = handlersByAction[action.type]
-      if (!handlers) {
-        return;
-      }
+  const fallbackHandlers = Object.entries(additionalReducers).reduce((handlers, [stateKey, handler]) => {
+    handlers.push({ key: stateKey, handler });
+    return handlers;
+  }, [] as Array<{ key: string, handler: Reducer<any> }>);
 
+  type State = MakeStateFromDefinitionMap<T> & { [K in keyof A]: ReturnType<A[K]> };
+  return (state = initialState, action: MakeActionFromDefinitionMap<T>): State => {
+    let nextState = state;
+    let hasChanges = false;
+    for (let i = 0; i < fallbackHandlers.length; i++) {
+      const keyAndHandler = fallbackHandlers[i];
+      const nextStateSlice = keyAndHandler.handler(nextState[keyAndHandler.key], action);
+      if (nextStateSlice !== state[keyAndHandler.key]) {
+        if (!hasChanges) {
+          nextState = { ...state };
+        }
+        nextState[keyAndHandler.key as keyof typeof state] = nextStateSlice;
+        hasChanges = true;
+      }
+    }
+
+    nextState = hasChanges ? nextState : state;
+    const handlers = handlersByAction[action.type]
+    if (!handlers) {
+      return nextState as any;
+    }
+
+    return produce(nextState, (draft: any) => {
       for (let i = 0; i < handlers.length; i++) {
         const keyAndHandler = handlers[i];
         keyAndHandler.handler(draft[keyAndHandler.key], action.payload);
       }
-    }) as MakeStateFromDefinitionMap<T> & { [K in keyof A]: ReturnType<A[K]> };
+    }) as any;
   };
 }
