@@ -1,4 +1,4 @@
-import { CreateActionType, action, createActions, makeLeafReducer, makeRootReducer } from "..";
+import { CreateActionType, action, createActions, makeLeafReducer, makeRootReducer } from "../reducer";
 
 describe("The action creators", () => {
   it("should create an action without a payload", () => {
