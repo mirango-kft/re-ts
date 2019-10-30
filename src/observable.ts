@@ -1,5 +1,6 @@
-import { Observable, queueScheduler, Subject, from, BehaviorSubject, merge } from "rxjs";
+import { Observable, Subject, from, BehaviorSubject, merge } from "rxjs";
 import { map, observeOn, distinctUntilChanged, subscribeOn, mergeMap, takeUntil, filter } from "rxjs/operators";
+import { QueueAction } from "rxjs/internal/scheduler/QueueAction";
 import { QueueScheduler } from "rxjs/internal/scheduler/QueueScheduler";
 import { Middleware, MiddlewareAPI, Dispatch } from "redux";
 
@@ -88,8 +89,7 @@ function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any,
 export const EPIC_END = "EPIC_END";
 
 export function createEpicMiddleware<A extends Action<any, any>, S>() {
-  const QueueScheduler = queueScheduler.constructor as new(action: any) => QueueScheduler;
-  const uniqueQueueScheduler = new QueueScheduler((queueScheduler as any).SchedulerAction);
+  const uniqueQueueScheduler = new QueueScheduler(QueueAction);
 
   const epic$ = new Subject<RuntimeEpic<A, S>>();
   const actions$ = new Subject<A>().pipe(observeOn(uniqueQueueScheduler)) as Subject<A>;
