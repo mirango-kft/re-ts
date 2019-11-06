@@ -1,13 +1,11 @@
 import { Draft, produce, setAutoFreeze } from "immer";
 
-import { Action } from "./common";
+import { Action, EmptyAction } from "./common";
 
 setAutoFreeze(false);
 
-type Something = object | string | number | boolean | symbol | bigint;
-type ReplaceReturnType<F extends (...args: any[]) => void, R> = (...args: Parameters<F>) => R;
-
-type ActionCreatorsMap = { [key: string]: (...args: any[]) => Action<any, any> };
+type ActionCreator<T extends string, A extends any[], P> = (...args: A) => Action<T, P>;
+interface ActionCreatorsMap { [key: string]: ActionCreator<any, any, any> };
 type ActionTypes<T extends ActionCreatorsMap> = { [K in keyof T]: ReturnType<T[K]>["type"] };
 type ReducerHandlers<S, A extends CreateActionType<ActionCreatorsMap>> = {
   [K in A["type"]]?: (state: Draft<S>, payload: Extract<A, { type: K }>["payload"]) => void;
@@ -22,7 +20,7 @@ interface ReducerDefinitionMap {
   [key: string]: ReducerDefiniton<any, any>;
 }
 
-type Reducer<S> = (state: S, action: any) => S;
+type Reducer<S, A = any> = (state: S, action: A) => S;
 
 interface ReducerMap {
   [key: string]: Reducer<any>;
@@ -47,18 +45,16 @@ export type CreateActionType<T extends ActionCreatorsMap> = {
   [K in keyof T]: ReturnType<T[K]>;
 }[keyof T];
 
-export function action<T extends string>(
-  type: T
-): () => { readonly type: T; readonly payload?: undefined };
-export function action<T extends string, C extends (...args: any[]) => Something>(
+export function action<T extends string>(type: T): () => EmptyAction<T>;
+export function action<T extends string, A extends any[], P>(
   type: T,
-  payloadCreator: C
-): ReplaceReturnType<C, { type: T; payload: ReturnType<C> }>;
-export function action<T extends string, C extends (...args: any[]) => Something>(
+  payloadCreator: (...args: A) => P,
+): ActionCreator<T, A, P>
+export function action<T extends string, A extends any[]>(
   type: T,
   payloadCreator = (() => undefined) as any
 ) {
-  return (...args: Parameters<C>) => ({ type, payload: payloadCreator(...args) });
+  return (...args: A) => ({ type, payload: payloadCreator(...args) });
 }
 
 export function createActions<T extends ActionCreatorsMap>(
@@ -129,7 +125,8 @@ export function makeRootReducer<T extends ReducerDefinitionMap, A extends Reduce
   );
 
   type State = MakeStateFromDefinitionMap<T> & { [K in keyof A]: ReturnType<A[K]> };
-  return (state = initialState, action: MakeActionFromDefinitionMap<T>): State => {
+  type FallbackActions = { [K in keyof A]: A[K] extends Reducer<any, infer A> ? A : never }[keyof A];
+  return (state = initialState, action: MakeActionFromDefinitionMap<T> | FallbackActions): State => {
     let nextState = state;
     let hasChanges = false;
     for (let i = 0; i < fallbackHandlers.length; i++) {

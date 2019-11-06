@@ -74,11 +74,9 @@ function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any,
     handler.next(action as any);
   });
 
-  const allActions$ = merge(...Object.values(handledActionSubjects), fallbackSubject);
-
   const runtimeEpic: ResultEpic = state$ => {
     const actionHandlers = Object.values(epic).flatMap(handlers => handlers).map((definition: any) => {
-      return definition.handler(handledActionSubjects[definition.type], state$, allActions$) as Observable<DefinitionActionType<D>>;
+      return definition.handler(handledActionSubjects[definition.type], state$, actions$) as Observable<DefinitionActionType<D>>;
     });
     return merge(...actionHandlers);
   };

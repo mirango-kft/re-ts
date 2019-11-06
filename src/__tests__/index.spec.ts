@@ -1,4 +1,7 @@
 import { CreateActionType, action, createActions, makeLeafReducer, makeRootReducer } from "../reducer";
+import { handleAsyncFactory, createEpic, combineEpics, createEpicMiddleware, EPIC_END } from "../observable";
+import { switchMap } from "rxjs/operators";
+import { createStore, applyMiddleware } from "redux";
 
 describe("The action creators", () => {
   it("should create an action without a payload", () => {
@@ -139,5 +142,50 @@ describe("The reducer", () => {
     expect(b.count === actual.count).toBe(false);
     expect(actual.count === initialState).toBe(false);
     expect(actual.count).toEqual({ a: 1, b: 10, c: 5 });
+  });
+});
+
+describe("The epics", () => {
+  const initialState = { value: 0 };
+  const [actions, actionTypes] = createActions(actionCreator => ({
+    trigger: actionCreator("trigger"),
+    increment: actionCreator("increment"),
+  }));
+  type TestActions = CreateActionType<typeof actions>;
+
+  function createTestStore() {
+    const count = makeLeafReducer<TestActions>()(initialState, {
+      [actionTypes.increment]: state => {
+        state.value += 1;
+      },
+    });
+    const reducer = makeRootReducer({ count });
+    const handleAsync = handleAsyncFactory<TestActions, ReturnType<typeof reducer>>();
+    const handleTrigger = handleAsync(actionTypes.trigger, actions$ => actions$.pipe(switchMap(() => [actions.increment()])))
+    const triggerEpic = createEpic(handleTrigger);
+    const epic = combineEpics(triggerEpic);
+    const { epicMiddleware, runMiddleware } = createEpicMiddleware();
+    const store = createStore(reducer, applyMiddleware(epicMiddleware));
+    store.dispatch({ type: "INIT" } as any);
+    runMiddleware(epic as any);
+    return store;
+  }
+
+  it("should set up a test store correctly", () => {
+    const store = createTestStore();
+    expect(store.getState()).toEqual({ count: { value: 0 }})
+  });
+
+  it("should update after an epic-dispatched event", () => {
+    const store = createTestStore();
+    store.dispatch(actions.trigger());
+    expect(store.getState()).toEqual({ count: { value: 1 } });
+  });
+
+  it("should stop listening to epic changes after EPIC_END", () => {
+    const store = createTestStore();
+    store.dispatch({ type: EPIC_END } as any);
+    store.dispatch(actions.trigger());
+    expect(store.getState()).toEqual({ count: { value: 0 } });
   });
 });
