@@ -6,35 +6,44 @@ export interface EqualityFn {
   (a: any, b: any): boolean;
 }
 
-export type SimpleSelector<S, R> = (state: S) => R;
-export type CompositeSelector<S, P, R> = (state: S, props: P) => R;
-
-export interface SelectorProps<S, P> {
-  idSelectors?: IdSelectors<S, P>;
+export interface SimpleSelector<S, R> {
+  (state: S): R;
+  idSelectors?: undefined;
 }
 
-export interface IdSelectors<S, P> extends Array<CompositeSelector<S, P, string>> {}
+export interface CompositeSelector<S, R> {
+  (state: S, props: undefined): R;
+  idSelectors?: undefined;
+}
 
-export type Selector<S, P, R> = SelectorProps<S, P> & (SimpleSelector<S, R> | CompositeSelector<S, P, R>);
+export interface CompositeInstanceSelector<S, P, R> {
+  (state: S, props: P): R;
+  idSelectors: IdSelectors<S, P>;
+}
 
-export function createIdSelector<P>(fn: IdSelector<P>): CompositeSelector<void, P, string> {
-  const res: any = (_: any, props: P) => fn(props);
+export interface IdSelectors<S, P> extends Array<CompositeInstanceSelector<S, P, string>> {}
+
+export type Selector<S, P, R> = SimpleSelector<S, R> | CompositeSelector<S, R> | CompositeInstanceSelector<S, P, R>;
+
+export function createIdSelector<P>(fn: IdSelector<P>): CompositeInstanceSelector<void, P, string> {
+  const res: CompositeInstanceSelector<void, P, string> = (_, props) => fn(props);
   res.idSelectors = [res];
   return res;
 }
 
+type SelectorResult<S, P, R> = P extends void ? CompositeSelector<S, R> : CompositeInstanceSelector<S, P, R>;
 export function createSelector<D extends Dependencies, R>(
   dependencies: D,
   combiner: Combiner<D, R>,
   equalityFn?: EqualityFn
-): Selector<State<D>, Props<D>, R> {
+): SelectorResult<State<D>, Props<D>, R> {
   const idSelectors = getIdSelectors(dependencies);
   if (idSelectors.length > 0) {
-    return makeInstanceSelector(dependencies, combiner, equalityFn, idSelectors);
+    return makeInstanceSelector(dependencies, combiner, equalityFn, idSelectors) as any;
   }
 
   const cache: Cache<R> = [undefined, undefined!];
-  return makeComputeFn(dependencies, combiner, equalityFn, () => cache);
+  return makeComputeFn(dependencies, combiner, equalityFn, () => cache) as any;
 }
 
 const emptyArray: any[] = [];
@@ -60,7 +69,7 @@ function makeComputeFn<D extends Dependencies, R>(
     }
 
     for (let i = 0; i < dependencies.length; i++) {
-      const currentArg = dependencies[i](state, props);
+      const currentArg = dependencies[i](state, props as any);
       recompute = recompute || prevArgs[i] !== currentArg;
       prevArgs[i] = currentArg;
     }
@@ -80,7 +89,7 @@ function makeInstanceSelector<D extends Dependencies, R>(
   combiner: Combiner<D, R>,
   equalityFn: EqualityFn | undefined,
   idSelectors: IdSelectors<State<D>, Props<D>>
-): CompositeSelector<State<D>, Props<D>, R> {
+): CompositeInstanceSelector<State<D>, Props<D>, R> {
   let cache: Record<any, any> = {};
 
   const result: any = makeComputeFn(dependencies, combiner, equalityFn, (state, props) => {
@@ -116,12 +125,12 @@ type UnionToIntersection<U> = (U extends any
   ? I
   : never;
 
-type Props<D extends any[]> = UnionToIntersection<
-  {
-    [K in keyof D]: D[K & number] extends Selector<any, infer P, any> ? P : never;
+type PropsUnion<D extends any[]> = {
+    [K in keyof D]: D[K] extends CompositeInstanceSelector<any, infer P, any> ? P : never;
   }[number]
->;
+
+type Props<D extends any[]> = PropsUnion<D> extends never ? void : UnionToIntersection<PropsUnion<D>>;
 
 type State<D extends any[]> = {
-  [K in keyof D]: D[K] extends Selector<infer S, any, any> ? (S extends void ? never : S) : never;
+  [K in keyof D]: D[K] extends Selector<infer S, any, any> ? S extends void ? never : S : never;
 }[number];
