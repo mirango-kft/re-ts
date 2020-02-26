@@ -12,7 +12,7 @@ export interface SimpleSelector<S, R> {
 }
 
 export interface CompositeSelector<S, R> {
-  (state: S, props: undefined): R;
+  (state: S): R;
   idSelectors?: undefined;
 }
 
