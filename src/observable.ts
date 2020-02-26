@@ -1,5 +1,13 @@
 import { Observable, Subject, from, BehaviorSubject, merge } from "rxjs";
-import { map, observeOn, distinctUntilChanged, subscribeOn, mergeMap, takeUntil, filter } from "rxjs/operators";
+import {
+  map,
+  observeOn,
+  distinctUntilChanged,
+  subscribeOn,
+  mergeMap,
+  takeUntil,
+  filter
+} from "rxjs/operators";
 import { QueueAction } from "rxjs/internal/scheduler/QueueAction";
 import { QueueScheduler } from "rxjs/internal/scheduler/QueueScheduler";
 import { Middleware, MiddlewareAPI, Dispatch } from "redux";
@@ -20,17 +28,26 @@ interface AsyncHandlerDefinition<A extends Action<any, any>, T extends string, S
 type Epic<T extends string, A extends AsyncHandlerDefinition<any, any, any>> = Record<T, Array<A>>;
 
 export function handleAsyncFactory<A extends Action<any, any>, S>() {
-  function handleAsync<T extends string>(type: T, handler: AsyncHandler<A, T, S>): AsyncHandlerDefinition<A, T, S> {
+  function handleAsync<T extends string>(
+    type: T,
+    handler: AsyncHandler<A, T, S>
+  ): AsyncHandlerDefinition<A, T, S> {
     return { type, handler };
   }
   return handleAsync;
 }
 
-type DefinitionActionType<D> = D extends AsyncHandlerDefinition<infer A, any, any> ? A["type"] : never;
+type DefinitionActionType<D> = D extends AsyncHandlerDefinition<infer A, any, any>
+  ? A["type"]
+  : never;
 type DefinitionStateType<D> = D extends AsyncHandlerDefinition<any, any, infer S> ? S : never;
-type WithGenericType<D> = D extends AsyncHandlerDefinition<infer A, any, infer S> ? AsyncHandlerDefinition<A, A["type"], S> : never;
+type WithGenericType<D> = D extends AsyncHandlerDefinition<infer A, any, infer S>
+  ? AsyncHandlerDefinition<A, A["type"], S>
+  : never;
 
-export function createEpic<D extends Array<AsyncHandlerDefinition<any, any, any>>>(...definitions: D) {
+export function createEpic<D extends Array<AsyncHandlerDefinition<any, any, any>>>(
+  ...definitions: D
+) {
   type ResultEpic = Epic<DefinitionActionType<D[number]>, WithGenericType<D[number]>>;
   return definitions.reduce((result, definition) => {
     let definitionsForType: any = result[definition.type as keyof ResultEpic];
@@ -43,7 +60,9 @@ export function createEpic<D extends Array<AsyncHandlerDefinition<any, any, any>
   }, {} as ResultEpic);
 }
 
-export function combineEpics<T extends string, A extends AsyncHandlerDefinition<any, any, any>>(...epics: Array<Epic<T, A>>): Epic<T, A> {
+export function combineEpics<T extends string, A extends AsyncHandlerDefinition<any, any, any>>(
+  ...epics: Array<Epic<T, A>>
+): Epic<T, A> {
   return epics.reduce((result, epic) => {
     for (const [type, definitions] of Object.entries(epic)) {
       let definitionsForType = result[type as keyof Epic<T, A>];
@@ -59,7 +78,10 @@ export function combineEpics<T extends string, A extends AsyncHandlerDefinition<
 
 type RuntimeEpic<A extends Action<any, any>, S> = (state$: Observable<S>) => Observable<A>;
 
-function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any, any, any>>(epic: Epic<T, D>, actions$: Observable<Action<any, any>>) {
+function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any, any, any>>(
+  epic: Epic<T, D>,
+  actions$: Observable<Action<any, any>>
+) {
   type ResultEpic = RuntimeEpic<DefinitionActionType<D>, DefinitionStateType<D>>;
   const handledActionSubjects = Object.keys(epic).reduce((actions, actionType) => {
     if (!actions[actionType]) {
@@ -75,9 +97,15 @@ function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any,
   });
 
   const runtimeEpic: ResultEpic = state$ => {
-    const actionHandlers = Object.values(epic).flatMap(handlers => handlers).map((definition: any) => {
-      return definition.handler(handledActionSubjects[definition.type], state$, actions$) as Observable<DefinitionActionType<D>>;
-    });
+    const actionHandlers = Object.values(epic)
+      .flatMap(handlers => handlers)
+      .map((definition: any) => {
+        return definition.handler(
+          handledActionSubjects[definition.type],
+          state$,
+          actions$
+        ) as Observable<DefinitionActionType<D>>;
+      });
     return merge(...actionHandlers);
   };
 
@@ -96,12 +124,18 @@ export function createEpicMiddleware<A extends Action<any, any>, S>() {
   const epicMiddleware: Middleware<{}, S> = store_ => {
     store = store_;
 
-    const stateSubject$ = new BehaviorSubject<S>(store.getState()).pipe(observeOn(uniqueQueueScheduler)) as BehaviorSubject<S>;
+    const stateSubject$ = new BehaviorSubject<S>(store.getState()).pipe(
+      observeOn(uniqueQueueScheduler)
+    ) as BehaviorSubject<S>;
     const state$ = stateSubject$.pipe(distinctUntilChanged());
 
     const result$ = epic$.pipe(
-      map(epic => epic(state$).pipe(takeUntil(actions$.pipe(filter(action => action.type === EPIC_END))))),
-      mergeMap(output$ => from(output$).pipe(subscribeOn(uniqueQueueScheduler), observeOn(uniqueQueueScheduler))),
+      map(epic =>
+        epic(state$).pipe(takeUntil(actions$.pipe(filter(action => action.type === EPIC_END))))
+      ),
+      mergeMap(output$ =>
+        from(output$).pipe(subscribeOn(uniqueQueueScheduler), observeOn(uniqueQueueScheduler))
+      )
     );
 
     result$.subscribe(store.dispatch);

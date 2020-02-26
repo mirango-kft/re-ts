@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2019",
     "module": "esnext",
     "moduleResolution": "node",
-    "lib": ["es2015", "es2016", "es2017", "esnext.array"],
+    "downlevelIteration": false,
 
     "declaration": true,
     "declarationDir": "dist",
@@ -12,5 +12,11 @@
     "strict": true,
     "outDir": "dist"
   },
-  "files": ["src/index.ts", "src/common.ts"]
+  "files": [
+    "src/index.ts",
+    "src/common.ts",
+    "src/observable.ts",
+    "src/reducer.ts",
+    "src/selector.ts"
+  ]
 }
