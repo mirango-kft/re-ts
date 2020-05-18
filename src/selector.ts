@@ -79,7 +79,7 @@ function makeComputeFn<D extends Dependencies, R>(
     }
 
     const result = combiner(...(prevArgs as any));
-    return (cache[1] = equalityFn && equalityFn(result, previousResult) ? previousResult : result);
+    return (cache[1] = (equalityFn && equalityFn(result, previousResult)) ? previousResult : result);
   };
   return computeResult;
 }

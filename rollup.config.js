@@ -7,8 +7,8 @@ export default {
   input: "./src/index.ts",
   output: [
     { file: "dist/index.js", format: "cjs" },
-    { file: "dist/index.module.js", format: "esm" }
+    { file: "dist/index.module.js", format: "esm" },
   ],
   external: dependencies,
-  plugins: [terser(), typescript({ cacheRoot: ".cache" })]
+  plugins: [terser(), typescript({ cacheRoot: ".cache" })],
 };
