@@ -1,4 +1,4 @@
-import { Observable, Subject, from, BehaviorSubject, merge } from "rxjs";
+import { Observable, Subject, from, BehaviorSubject, merge, queueScheduler } from "rxjs";
 import {
   map,
   observeOn,
@@ -6,10 +6,8 @@ import {
   subscribeOn,
   mergeMap,
   takeUntil,
-  filter
+  filter,
 } from "rxjs/operators";
-import { QueueAction } from "rxjs/internal/scheduler/QueueAction";
-import { QueueScheduler } from "rxjs/internal/scheduler/QueueScheduler";
 import { Middleware, MiddlewareAPI, Dispatch } from "redux";
 
 import { Action } from "./common";
@@ -91,14 +89,14 @@ function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any,
   }, {} as { [key: string]: Subject<DefinitionActionType<D>> });
   const fallbackSubject = new Subject<DefinitionActionType<D>>();
 
-  const actionSubscription = actions$.subscribe(action => {
+  const actionSubscription = actions$.subscribe((action) => {
     const handler = handledActionSubjects[action.type] || fallbackSubject;
     handler.next(action as any);
   });
 
-  const runtimeEpic: ResultEpic = state$ => {
+  const runtimeEpic: ResultEpic = (state$) => {
     const actionHandlers = Object.values(epic)
-      .flatMap(handlers => handlers)
+      .flatMap((handlers) => handlers)
       .map((definition: any) => {
         return definition.handler(
           handledActionSubjects[definition.type],
@@ -115,32 +113,30 @@ function makeRuntimeEpic<T extends string, D extends AsyncHandlerDefinition<any,
 export const EPIC_END = "EPIC_END";
 
 export function createEpicMiddleware<A extends Action<any, any>, S>() {
-  const uniqueQueueScheduler = new QueueScheduler(QueueAction);
-
   const epic$ = new Subject<RuntimeEpic<A, S>>();
-  const actions$ = new Subject<A>().pipe(observeOn(uniqueQueueScheduler)) as Subject<A>;
+  const actions$ = new Subject<A>().pipe(observeOn(queueScheduler)) as Subject<A>;
 
   let store: MiddlewareAPI<Dispatch, S>;
-  const epicMiddleware: Middleware<{}, S> = store_ => {
+  const epicMiddleware: Middleware<{}, S> = (store_) => {
     store = store_;
 
     const stateSubject$ = new BehaviorSubject<S>(store.getState()).pipe(
-      observeOn(uniqueQueueScheduler)
+      observeOn(queueScheduler)
     ) as BehaviorSubject<S>;
     const state$ = stateSubject$.pipe(distinctUntilChanged());
 
     const result$ = epic$.pipe(
-      map(epic =>
-        epic(state$).pipe(takeUntil(actions$.pipe(filter(action => action.type === EPIC_END))))
+      map((epic) =>
+        epic(state$).pipe(takeUntil(actions$.pipe(filter((action) => action.type === EPIC_END))))
       ),
-      mergeMap(output$ =>
-        from(output$).pipe(subscribeOn(uniqueQueueScheduler), observeOn(uniqueQueueScheduler))
+      mergeMap((output$) =>
+        from(output$).pipe(subscribeOn(queueScheduler), observeOn(queueScheduler))
       )
     );
 
     result$.subscribe(store.dispatch);
 
-    return next => action => {
+    return (next) => (action) => {
       const result = next(action);
       stateSubject$.next(store.getState());
       actions$.next(action);

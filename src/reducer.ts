@@ -1,8 +1,6 @@
-import { Draft, produce, setAutoFreeze } from "immer";
+import { Draft, produce } from "immer";
 
 import { Action, EmptyAction } from "./common";
-
-setAutoFreeze(false);
 
 export type CreateActionType<T extends ActionCreatorsMap> = {
   [K in keyof T]: ReturnType<T[K]>;
@@ -24,12 +22,11 @@ export function createActions<T extends ActionCreatorsMap>(
   actionFactory: (actionCreator: typeof action) => T
 ): [T, ActionTypes<T>] {
   const actionTypes: Record<string, string> = {};
-  const actionCreator = (type: string, payloadCreator: (...args: any[]) => any) => (
-    properyName: string
-  ) => {
-    actionTypes[properyName] = type;
-    return action(type, payloadCreator);
-  };
+  const actionCreator =
+    (type: string, payloadCreator: (...args: any[]) => any) => (properyName: string) => {
+      actionTypes[properyName] = type;
+      return action(type, payloadCreator);
+    };
 
   const actionProxies = actionFactory(actionCreator as any);
   const actions = Object.keys(actionProxies).reduce((acc, key) => {
@@ -43,7 +40,7 @@ export function createActions<T extends ActionCreatorsMap>(
 export function makeLeafReducer<A extends CreateActionType<ActionCreatorsMap>>() {
   return <S>(initialState: S, handlers: ReducerHandlers<S, A>): ReducerDefiniton<S, A> => ({
     initialState,
-    handlers
+    handlers,
   });
 }
 
