@@ -23,10 +23,7 @@ export interface CompositeInstanceSelector<S, P, R> {
 
 export interface IdSelectors<S, P> extends Array<CompositeInstanceSelector<S, P, string>> {}
 
-export type Selector<S, P, R> =
-  | SimpleSelector<S, R>
-  | CompositeSelector<S, R>
-  | CompositeInstanceSelector<S, P, R>;
+export type Selector<S, P, R> = SimpleSelector<S, R> | CompositeSelector<S, R> | CompositeInstanceSelector<S, P, R>;
 
 export function createIdSelector<P>(fn: IdSelector<P>): CompositeInstanceSelector<void, P, string> {
   const res: CompositeInstanceSelector<void, P, string> = (_, props) => fn(props);
@@ -34,11 +31,7 @@ export function createIdSelector<P>(fn: IdSelector<P>): CompositeInstanceSelecto
   return res;
 }
 
-type SelectorResult<S, P, R> = P extends void
-  ? CompositeSelector<S, R>
-  : CompositeInstanceSelector<S, P, R>;
-
-const emptyRef = {};
+type SelectorResult<S, P, R> = P extends void ? CompositeSelector<S, R> : CompositeInstanceSelector<S, P, R>;
 export function createSelector<D extends Dependencies, R>(
   dependencies: D,
   combiner: Combiner<D, R>,
@@ -49,13 +42,13 @@ export function createSelector<D extends Dependencies, R>(
     return makeInstanceSelector(dependencies, combiner, equalityFn, idSelectors) as any;
   }
 
-  const cache: Cache<R> = [undefined, undefined!, new WeakRef(emptyRef)];
+  const cache: Cache<R> = [undefined, undefined!];
   return makeComputeFn(dependencies, combiner, equalityFn, () => cache) as any;
 }
 
 const emptyArray: any[] = [];
 function getIdSelectors<D extends Dependencies>(dependencies: D): IdSelectors<State<D>, Props<D>> {
-  return [...new Set(dependencies.flatMap((dep) => dep.idSelectors || emptyArray))];
+  return [...new Set(dependencies.flatMap(dep => dep.idSelectors || emptyArray))];
 }
 
 function makeComputeFn<D extends Dependencies, R>(
@@ -66,16 +59,9 @@ function makeComputeFn<D extends Dependencies, R>(
 ) {
   const computeResult = (state: State<D>, props: Props<D>) => {
     const cache = getCache(state, props);
-    const previousResult = cache[1];
-    const previousState = cache[2];
-
-    if (state === previousState.deref()) {
-      return previousResult;
-    } else {
-      cache[2] = new WeakRef(state as never);
-    }
-
     let prevArgs = cache[0];
+    const previousResult = cache[1];
+
     let recompute = false;
     if (!prevArgs) {
       recompute = true;
@@ -93,7 +79,7 @@ function makeComputeFn<D extends Dependencies, R>(
     }
 
     const result = combiner(...(prevArgs as any));
-    return (cache[1] = equalityFn && equalityFn(result, previousResult) ? previousResult : result);
+    return (cache[1] = (equalityFn && equalityFn(result, previousResult)) ? previousResult : result);
   };
   return computeResult;
 }
@@ -116,14 +102,14 @@ function makeInstanceSelector<D extends Dependencies, R>(
       currentCache = currentCache[currentId] || (currentCache[currentId] = {});
     }
 
-    return currentCache[id] || (currentCache[id] = [undefined, undefined, new WeakRef(emptyRef)]);
+    return currentCache[id] || (currentCache[id] = [undefined, undefined]);
   });
   result.idSelectors = idSelectors;
 
   return result;
 }
 
-type Cache<R> = [args: unknown[] | undefined, value: R, previousState: WeakRef<object>];
+type Cache<R> = [unknown[] | undefined, R];
 
 type Dependencies = [Selector<any, any, any>, ...Array<Selector<any, any, any>>];
 
@@ -133,18 +119,18 @@ type DependencyResults<D extends any[]> = {
 
 type Combiner<D extends any[], R> = (...results: DependencyResults<D>) => R;
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+type UnionToIntersection<U> = (U extends any
+? (k: U) => void
+: never) extends (k: infer I) => void
   ? I
   : never;
 
 type PropsUnion<D extends any[]> = {
-  [K in keyof D]: D[K] extends CompositeInstanceSelector<any, infer P, any> ? P : never;
-}[number];
+    [K in keyof D]: D[K] extends CompositeInstanceSelector<any, infer P, any> ? P : never;
+  }[number]
 
-type Props<D extends any[]> = PropsUnion<D> extends never
-  ? void
-  : UnionToIntersection<PropsUnion<D>>;
+type Props<D extends any[]> = PropsUnion<D> extends never ? void : UnionToIntersection<PropsUnion<D>>;
 
 type State<D extends any[]> = {
-  [K in keyof D]: D[K] extends Selector<infer S, any, any> ? (S extends void ? never : S) : never;
+  [K in keyof D]: D[K] extends Selector<infer S, any, any> ? S extends void ? never : S : never;
 }[number];
